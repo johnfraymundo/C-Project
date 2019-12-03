@@ -11,6 +11,7 @@ struct point {
 
 struct GameMap{
     //comments
+    //more
 };
 
 struct organismList{
