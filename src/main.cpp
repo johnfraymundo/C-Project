@@ -10,6 +10,7 @@ struct point {
 };
 
 struct GameMap{
+    //comments
 };
 
 struct organismList{
