@@ -27,15 +27,24 @@ class thing{
 struct GameMap{
     //comments
     //more
-    GameMap(point extent, std::vector<std::vector<thing>> vect): extent(extent), gamemap(vect){}
-    
+    GameMap(point extent, std::vector<std::vector<thing*>> vect): extent(extent), gamemap(vect){}
+
     public:
     point extent; 
-    std::vector<std::vector<thing>> gamemap;
+    std::vector<std::vector<thing*>> gamemap;
+
+    void constructMap(){
+        
+    }
     
+    void changePosition(){
+
+    }
+
+    void deadOrganism(){
+
+    }
 };
-
-
 
 class environmentObject : thing{
     environmentObject() : thing(false, false){}
