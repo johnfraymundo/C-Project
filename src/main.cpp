@@ -1,5 +1,10 @@
 #include <iostream>
-#include <string> 
+#include <string>
+#include <fstream>
+#include <map>
+#include <vector>   
+
+
 
 struct point {
     point() : x( 0 ), y( 0 ) {}
@@ -9,16 +14,35 @@ struct point {
     int y;
 };
 
+class thing{
+    public:
+    thing() : canmove(false), passable(false), label("none"){}
+    thing(bool canmove, bool passable) : canmove(canmove), passable(passable){}
+
+    bool passable;
+    bool canmove; 
+    std::string label; 
+};
+
 struct GameMap{
     //comments
     //more
+    GameMap(point extent, std::vector<std::vector<thing>> vect): extent(extent), gamemap(vect){}
+    
+    public:
+    point extent; 
+    std::vector<std::vector<thing>> gamemap;
+    
 };
 
-struct organismList{
+
+
+class environmentObject : thing{
+    environmentObject() : thing(false, false){}
 
 };
 
-class organism{
+class organism : thing{
     organism(int energy, std::string type, point location): energy(energy), location(location), type(type){}
 
     public:
@@ -64,4 +88,6 @@ int main(){
         gameLoop( );
         ++n; 
     }
+
+    //Tests Below 
 }
