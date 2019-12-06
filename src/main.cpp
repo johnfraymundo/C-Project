@@ -3,6 +3,7 @@
 #include <fstream>
 #include <map>
 #include <vector>   
+#include <set>
 
 
 
@@ -24,6 +25,14 @@ class thing{
     std::string label; 
 };
 
+void parseTxT(std::string input){
+    std::ifstream file("input.txt");
+    std::string str;
+    while (std::getline(file, str)) {
+        std::cout << str << "\n";
+    }
+}
+
 struct GameMap{
     //comments
     //more
@@ -33,7 +42,7 @@ struct GameMap{
     point extent; 
     std::vector<std::vector<thing*>> gamemap;
 
-    void constructMap(){
+    void constructMapFromFile(){
         
     }
     
@@ -41,9 +50,6 @@ struct GameMap{
 
     }
 
-    void deadOrganism(){
-
-    }
 };
 
 class environmentObject : thing{
@@ -67,6 +73,19 @@ class organism : thing{
 
     void consume(){
     }
+
+};
+
+struct OrganismList{
+    OrganismList() : orgVector(){} 
+    public:
+    std::vector<organism> orgVector; 
+};
+
+struct OrganismDirectory{
+    OrganismDirectory() : odirectory(){}
+    public:
+    std::set<organism> odirectory; 
 
 };
 
