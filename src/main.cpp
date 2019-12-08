@@ -21,7 +21,7 @@ void parseTxT(std::string fileinput){
     int r; 
     while (std::getline(file, str)) {
         std::cout << str << "\n";
-        std::cout << str.size(); 
+        std::cout << str.length(); 
     }
 }
 
@@ -29,6 +29,7 @@ class thing{
 public:
     using thing_id = char; 
     
+    thing() : id_(){}
     thing(thing_id id) : id_(id){}
     virtual ~thing() {}
 
@@ -63,7 +64,6 @@ public:
 
 struct GameMap{
     GameMap(): extent(extent), gamemap(gamemap){}
-
 
     void constructMapFromFile(){
     }
@@ -108,8 +108,10 @@ struct OrganismList{
 
 struct OrganismDirectory{
     OrganismDirectory() : odirectory(){}
+
+    
     public:
-    std::set<organism> odirectory; 
+    std::vector<organism> odirectory; 
 
 };
 
@@ -133,7 +135,7 @@ int main(){
     int iterations; 
     std::cout << "Welcome to the game! Please input the number of iterations you would like to do.";
     std::cin >> iterations; 
-    std::cout << "You've selected: " << iterations << " many iterations, beginning!";
+    std::cout << "You've selected: " << iterations << " many iterations, beginning!\n";
     
     parseTxT("mapinput.txt");
     parseTxT("species.txt");
