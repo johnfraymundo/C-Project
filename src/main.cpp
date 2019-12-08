@@ -6,7 +6,6 @@
 #include <set>
 
 
-
 struct point {
     point() : x( 0 ), y( 0 ) {}
     point( int x, int y ) : x( x ), y( y ) {}
@@ -15,46 +14,71 @@ struct point {
     int y;
 };
 
-class thing{
-    public:
-    thing() : canmove(false), passable(false), label("none"){}
-    thing(bool canmove, bool passable) : canmove(canmove), passable(passable){}
 
-    bool passable;
-    bool canmove; 
-    std::string label; 
-};
-
-void parseTxT(std::string input){
-    std::ifstream file("input.txt");
-    std::string str;
+void parseTxT(std::string fileinput){
+    std::ifstream file(fileinput);
+    std::string str; 
+    int r; 
     while (std::getline(file, str)) {
         std::cout << str << "\n";
+        std::cout << str.size(); 
     }
 }
 
-struct GameMap{
-    //comments
-    //more
-    GameMap(point extent, std::vector<std::vector<thing*>> vect): extent(extent), gamemap(vect){}
+class thing{
+public:
+    using thing_id = char; 
+    
+    thing(thing_id id) : id_(id){}
+    virtual ~thing() {}
 
-    public:
-    point extent; 
-    std::vector<std::vector<thing*>> gamemap;
+    thing_id  id() const
+    {
+        return id_;
+    }
+    
+    virtual std::string type() const 
+    { 
+        return ""; 
+    }
+
+    virtual void write( std::ostream& ) const;
+
+    virtual std::unique_ptr<thing> new_from_stream( std::istream& in ) const
+    {
+        thing_id id;
+        if ( in >> id )
+            return this->create( id );
+
+        return nullptr;
+    }
+
+    virtual std::unique_ptr<thing> create( thing_id id ) const
+    {
+        return nullptr;
+    }
+
+    thing_id id_; 
+};
+
+struct GameMap{
+    GameMap(): extent(extent), gamemap(gamemap){}
+
 
     void constructMapFromFile(){
-        
     }
     
     void changePosition(){
-
     }
 
+    private:
+    point extent; 
+    std::vector<std::vector<thing*>> gamemap;
 };
 
-class environmentObject : thing{
-    environmentObject() : thing(false, false){}
-
+class TerrainObject : thing{
+    TerrainObject() : thing('t'){}
+    
 };
 
 class organism : thing{
@@ -110,12 +134,13 @@ int main(){
     std::cout << "Welcome to the game! Please input the number of iterations you would like to do.";
     std::cin >> iterations; 
     std::cout << "You've selected: " << iterations << " many iterations, beginning!";
-
+    
+    parseTxT("mapinput.txt");
+    parseTxT("species.txt");
     int n = 0;
     while (n < iterations - 1){
         gameLoop( );
         ++n; 
     }
-
     //Tests Below 
 }
