@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <map>
 #include <vector>   
@@ -9,6 +10,20 @@
 struct point {
     point() : x( 0 ), y( 0 ) {}
     point( int x, int y ) : x( x ), y( y ) {}
+
+    point& operator+=( point const& other )
+    {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+
+    point& operator-=( point const& other ) 
+    {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
 
     int x;
     int y;
@@ -25,13 +40,16 @@ void parseTxT(std::string fileinput){
     }
 }
 
-class thing{
+struct thing{
 public:
     using thing_id = char; 
     
     thing() : id_(){}
     thing(thing_id id) : id_(id){}
-    virtual ~thing() {}
+
+    virtual ~thing() {
+        std::cout << "Destroying thing";
+    }
 
     thing_id  id() const
     {
@@ -59,6 +77,7 @@ public:
         return nullptr;
     }
 
+    public:
     thing_id id_; 
 };
 
@@ -76,54 +95,136 @@ struct GameMap{
     std::vector<std::vector<thing*>> gamemap;
 };
 
-class TerrainObject : thing{
-    TerrainObject() : thing('t'){}
-    
+struct TerrainObject : thing{
+    TerrainObject() : thing(){}
 };
 
-class organism : thing{
-    organism(int energy, std::string type, point location): energy(energy), location(location), type(type){}
-
+struct organism : thing{
     public:
-    int energy; 
-    std::string type;
-    point location; 
+    organism(thing_id id, int energy, std::string type, point location): energy(energy), location(location), thing(id){}
 
-    void move(const point&){
+    int energy; 
+    point location;
+    thing_id id;
+    std::string type;
+
+    virtual std::string kind() const { 
+        return type; 
+    }
+
+    void move(const point& destination){
+        this -> location = destination;
     }
     
     void gainEnergy(){
     }
 
-    void consume(){
+    virtual void consume( organism& org){
+        this -> energy += org.energy;
     }
 
 };
 
-struct OrganismList{
-    OrganismList() : orgVector(){} 
+struct plant : organism{
+    plant(char id, int energy, std::string type, point location, int regrowth, bool passable) : organism(id, energy, type, location), regrow_coeff(regrowth){}
+
+    std::string kind() const override{
+        return "plant";
+    }
+
+    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, int regrowth ) const 
+    {
+        return std::make_unique<plant>(id, energy, location, regrowth);
+    }
+
+    void gainEnergy(){
+        int reg = regrow_coeff;
+        while (reg != 0){
+            --reg;
+        }
+
+        this -> passable = true;     
+    } 
+
     public:
-    std::vector<organism> orgVector; 
+    int regrow_coeff;
+    bool passable;
+
+};
+
+struct herbivore : organism{
+    herbivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){} 
+
+    std::string kind() const override{
+        return "herbivore";
+    }
+
+    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
+    {
+        return std::make_unique<herbivore>(id, energy, type, location, prey);
+    } 
+
+    private:
+    std::vector<thing_id> prey; 
+
+
+};
+
+struct omnivore : organism{
+    omnivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){}
+    
+    std::string kind() const override{
+        return "omnivore";
+    }
+
+    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
+    {
+        return std::make_unique<omnivore>(id, energy, type, location, prey);
+    }  
+
+    private:
+    std::vector<thing_id> prey; 
+
+};
+
+struct OrganismList{
+    OrganismList() : orgVector(orgVector){} 
+
+    void addToList(std::unique_ptr<organism> org){
+        this -> orgVector.push_back(org); 
+    }
+    void removeHelper(){
+        int i = 0; 
+        for()
+    }
+    void removeFromList(point p){
+        this -> orgVector.erase(); 
+    }
+    public:
+    std::vector<std::unique_ptr<organism>> orgVector; 
 };
 
 struct OrganismDirectory{
-    OrganismDirectory() : odirectory(){}
+    //vector of organism templates 
+    OrganismDirectory()
+    {
+        this -> odirectory.push_back(std::make_unique<plant>());
+        this -> odirectory.push_back(std::make_unique<herbivore>());
+        this -> odirectory.push_back(std::make_unique<omnivore>());
+    }
 
+    organism* find( std::string const& d ) const
+    {
+        for ( auto& org : this->odirectory )
+            if ( org->kind() == d )
+                return org.get();
+
+        return nullptr;
+    }
     
-    public:
-    std::vector<organism> odirectory; 
 
-};
-
-class plant : organism{
-
-};
-
-class Herbavore : organism{
-
-};
-
-class Omnivore : organism{
+    private:
+    std::vector<std::unique_ptr<organism>> odirectory; 
 
 };
 
