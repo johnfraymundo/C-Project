@@ -35,17 +35,33 @@ struct point {
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
-    std::regex r("([])");
+    std::regex reg(R"(?<=\[).+?(?=\])");
+    std::smatch matches; 
+    std::cout << std::boolalpha;
+
     while (std::getline(file, str)) {
         std::cout << str << "\n";
-        std::cout << str.length(); 
+        
+        std::regex_search(str, matches, reg); 
+            std::cout << "is there a match : " << matches.ready() << "\n";
+            std::cout << "Are there no matches : " <<  matches.empty() << "\n"; 
+            std::cout << "Number of matches : " << matches.size() << "\n";
+            std::cout << matches.str(1) << "\n";
+            str = matches.suffix().str(); 
+            std::cout << "\n\n\n\n";
+       
+        //std::cout << str << "\n";
+        //std::cout << str.length(); 
     }
 }
 
+/*
 std::vector<char> regexPreyList(std::string str){
     std::regex r("([])");
+    std::smatch matches;  
 
 } 
+*/
 
 struct thing{
 public:
@@ -115,11 +131,11 @@ struct TerrainObject : public thing{
 
 struct organism : public thing{
     public:
+    organism() : thing(), energy(energy), location(location), type(type){}
     organism(thing_id id, int energy, std::string type, point location): energy(energy), location(location), thing(id){}
 
     int energy; 
     point location;
-    thing_id id;
     std::string type;
 
     virtual std::string kind() const { 
@@ -140,15 +156,16 @@ struct organism : public thing{
 };
 
 struct plant : public organism{
+    plant() : organism(), regrow_coeff(regrow_coeff), passable(regrow_coeff) {}
     plant(char id, int energy, std::string type, point location, int regrowth, bool passable) : organism(id, energy, type, location), regrow_coeff(regrowth){}
 
     std::string kind() const override{
         return "plant";
     }
 
-    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, int regrowth ) const 
+    std::shared_ptr<thing> create(thing_id id, int energy, std::string type, point location, int regrowth, bool passable) const 
     {
-        return std::make_shared<plant>(id, energy, location, regrowth);
+        return std::make_shared<plant>(id, energy, type, location, regrowth, passable);
     }
 
     void gainEnergy(){
@@ -167,6 +184,7 @@ struct plant : public organism{
 };
 
 struct herbivore : public organism{
+    herbivore() : organism(), prey(prey){}
     herbivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){} 
 
     std::string kind() const override{
@@ -185,6 +203,7 @@ struct herbivore : public organism{
 };
 
 struct omnivore : public organism{
+    omnivore() : organism(), prey(prey){}
     omnivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){}
     
     std::string kind() const override{
@@ -219,12 +238,12 @@ struct OrganismList{
 
 //Directory of all species types
 struct OrganismDirectory{
-    OrganismDirectory()
-    {
-        this -> odirectory.push_back(std::make_unique<plant>());
-        this -> odirectory.push_back(std::make_unique<herbivore>());
-        this -> odirectory.push_back(std::make_unique<omnivore>());
-    }
+    OrganismDirectory() : odirectory(){} 
+        /*
+        this -> odirectory.push_back(std::make_shared<plant>());
+        this -> odirectory.push_back(std::make_shared<herbivore>());
+        this -> odirectory.push_back(std::make_shared<omnivore>());
+        */ 
 
     organism* find( std::string const& d ) const
     {
@@ -269,7 +288,8 @@ int main(){
     std::cin >> iterations; 
     std::cout << "You've selected: " << iterations << " many iterations, beginning!\n";
     
-    parseTxT("mapinput.txt");
+    //parseTxT("mapinput.txt");
+
     parseTxT("species.txt");
 
     GameMap map; 
