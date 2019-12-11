@@ -7,6 +7,7 @@
 #include <vector>   
 #include <set>
 #include <memory>
+#include <list>
 
 
 struct point {
@@ -31,12 +32,58 @@ struct point {
     int y;
 };
 
+void altparseTxt(std::string fileinput){
+    char id; 
+    std::string type;
+    int regrow;
+    char prey; 
+    int energy; 
+
+    std::string str; 
+
+    std::ifstream myfile(fileinput);
+    std::ifstream myfile2(fileinput);
+
+    if(!myfile){
+        std::cout << "Error, species.txt is not found";
+        system("pause");
+        exit(EXIT_FAILURE); 
+    }
+
+    while (std::getline(myfile2, str)){
+        std::cout << str << "\n"; 
+        
+        if(myfile >> type >> id >> regrow >> energy)
+        {
+            std::cout << type << " ";
+            std::cout << id << " ";
+            std::cout << regrow << " ";
+            std::cout << energy << "\n";  
+        }
+        if (myfile >> type >> id >> energy){
+            std::cout << type << "\n";
+            std::cout << id << "\n";
+            std::cout << prey << "\n";
+            std::cout << energy << "\n";  
+        }           
+        else
+        {
+            std::cout << "INVALID FORMAT \n";
+            continue;   
+        }
+            
+    }
+
+
+}
+
 
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
     std::regex reg(R"(?<=\[).+?(?=\])");
     std::smatch matches; 
+
     std::cout << std::boolalpha;
 
     while (std::getline(file, str)) {
@@ -54,6 +101,8 @@ void parseTxT(std::string fileinput){
         //std::cout << str.length(); 
     }
 }
+
+
 
 /*
 std::vector<char> regexPreyList(std::string str){
@@ -99,6 +148,10 @@ public:
     {
         return nullptr;
     }
+
+    void setID( char id ){
+        this ->id_ = id; 
+    } 
 
     public:
     thing_id id_; 
@@ -213,7 +266,7 @@ struct omnivore : public organism{
     std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
     {
         return std::make_shared<omnivore>(id, energy, type, location, prey);
-    }  
+    } 
 
     private:
     std::vector<thing_id> prey; 
@@ -290,7 +343,8 @@ int main(){
     
     //parseTxT("mapinput.txt");
 
-    parseTxT("species.txt");
+    //parseTxT("species.txt");
+    altparseTxt("species.txt");
 
     GameMap map; 
     OrganismDirectory orgd;
