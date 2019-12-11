@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
+#include <regex> 
 #include <sstream>
 #include <fstream>
 #include <map>
 #include <vector>   
 #include <set>
+#include <memory>
 
 
 struct point {
@@ -33,12 +35,17 @@ struct point {
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
-    int r; 
+    std::regex r("([])");
     while (std::getline(file, str)) {
         std::cout << str << "\n";
         std::cout << str.length(); 
     }
 }
+
+std::vector<char> regexPreyList(std::string str){
+    std::regex r("([])");
+
+} 
 
 struct thing{
 public:
@@ -63,7 +70,7 @@ public:
 
     virtual void write( std::ostream& ) const;
 
-    virtual std::unique_ptr<thing> new_from_stream( std::istream& in ) const
+    virtual std::shared_ptr<thing> new_from_stream( std::istream& in ) const
     {
         thing_id id;
         if ( in >> id )
@@ -72,7 +79,7 @@ public:
         return nullptr;
     }
 
-    virtual std::unique_ptr<thing> create( thing_id id ) const
+    virtual std::shared_ptr<thing> create( thing_id id ) const
     {
         return nullptr;
     }
@@ -85,21 +92,28 @@ struct GameMap{
     GameMap(): extent(extent), gamemap(gamemap){}
 
     void constructMapFromFile(){
+        parseTxT("species.txt");
+
     }
     
-    void changePosition(){
+    void changePosition(point current , point destination )
+    {
+        std::shared_ptr<thing> curr = this ->gamemap[current.x][current.y];
+        std::shared_ptr<thing> dest = this ->gamemap[destination.x][destination.y]; 
+
+        dest = std::move(curr); 
     }
 
     private:
     point extent; 
-    std::vector<std::vector<thing*>> gamemap;
+    std::vector<std::vector<std::shared_ptr<thing>>> gamemap;
 };
 
-struct TerrainObject : thing{
+struct TerrainObject : public thing{
     TerrainObject() : thing(){}
 };
 
-struct organism : thing{
+struct organism : public thing{
     public:
     organism(thing_id id, int energy, std::string type, point location): energy(energy), location(location), thing(id){}
 
@@ -125,16 +139,16 @@ struct organism : thing{
 
 };
 
-struct plant : organism{
+struct plant : public organism{
     plant(char id, int energy, std::string type, point location, int regrowth, bool passable) : organism(id, energy, type, location), regrow_coeff(regrowth){}
 
     std::string kind() const override{
         return "plant";
     }
 
-    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, int regrowth ) const 
+    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, int regrowth ) const 
     {
-        return std::make_unique<plant>(id, energy, location, regrowth);
+        return std::make_shared<plant>(id, energy, location, regrowth);
     }
 
     void gainEnergy(){
@@ -152,16 +166,16 @@ struct plant : organism{
 
 };
 
-struct herbivore : organism{
+struct herbivore : public organism{
     herbivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){} 
 
     std::string kind() const override{
         return "herbivore";
     }
 
-    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
+    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
     {
-        return std::make_unique<herbivore>(id, energy, type, location, prey);
+        return std::make_shared<herbivore>(id, energy, type, location, prey);
     } 
 
     private:
@@ -170,16 +184,16 @@ struct herbivore : organism{
 
 };
 
-struct omnivore : organism{
+struct omnivore : public organism{
     omnivore(char id, int energy, std::string type, point location, std::vector<thing_id> prey) : organism(id, energy, type, location){}
     
     std::string kind() const override{
         return "omnivore";
     }
 
-    std::unique_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
+    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
     {
-        return std::make_unique<omnivore>(id, energy, type, location, prey);
+        return std::make_shared<omnivore>(id, energy, type, location, prey);
     }  
 
     private:
@@ -190,22 +204,21 @@ struct omnivore : organism{
 struct OrganismList{
     OrganismList() : orgVector(orgVector){} 
 
-    void addToList(std::unique_ptr<organism> org){
+    void addToList(std::shared_ptr<organism> org){
         this -> orgVector.push_back(org); 
     }
     void removeHelper(){
-        int i = 0; 
-        for()
     }
     void removeFromList(point p){
-        this -> orgVector.erase(); 
+        //this -> orgVector.erase(); 
     }
     public:
-    std::vector<std::unique_ptr<organism>> orgVector; 
+    std::vector<std::shared_ptr<organism>> orgVector; 
 };
 
+
+//Directory of all species types
 struct OrganismDirectory{
-    //vector of organism templates 
     OrganismDirectory()
     {
         this -> odirectory.push_back(std::make_unique<plant>());
@@ -221,16 +234,34 @@ struct OrganismDirectory{
 
         return nullptr;
     }
-    
 
+    void add(std::shared_ptr<organism> org){
+        this -> odirectory.push_back(org); 
+    }
+    
     private:
-    std::vector<std::unique_ptr<organism>> odirectory; 
+    std::vector<std::shared_ptr<organism>> odirectory; 
 
 };
+
+void populateMap(){
+
+}
 
 void gameLoop(){
     //Do game stuff here 
 }
+
+
+/*
+GAME RUNTIME ORDER::
+1. Build species directory
+2. Build Terrain list/directory 
+3. Build game map and alive organism list using location of chars in each row
+4. Run Game iteration 
+4a include all organism functions 1.plants 2.animals
+5. Iterate through 4 for n many iterations.  
+*/ 
 
 int main(){
     int iterations; 
@@ -240,6 +271,11 @@ int main(){
     
     parseTxT("mapinput.txt");
     parseTxT("species.txt");
+
+    GameMap map; 
+    OrganismDirectory orgd;
+    OrganismList orgl; 
+
     int n = 0;
     while (n < iterations - 1){
         gameLoop( );
