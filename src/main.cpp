@@ -31,6 +31,51 @@ struct point {
     int y;
 };
 
+void altparseTxt(std::string fileinput){
+    char id; 
+    std::string type;
+    int regrow;
+    char prey; 
+    int energy; 
+
+    std::string str; 
+
+    std::ifstream myfile(fileinput);
+    std::ifstream myfile2(fileinput);
+
+    if(!myfile){
+        std::cout << "Error, species.txt is not found";
+        system("pause");
+        exit(EXIT_FAILURE); 
+    }
+
+    while (std::getline(myfile2, str)){
+       // std::cout << str << "\n"; 
+        
+        if(myfile >> type >> id >> regrow >> energy)
+        {
+            std::cout << type << " ";
+            std::cout << id << " ";
+            std::cout << regrow << " ";
+            std::cout << energy << "\n";  
+        }
+        if (myfile >> type >> id >> energy){
+            std::cout << type << " ";
+            std::cout << id << " ";
+            std::cout << prey << " ";
+            std::cout << energy << "\n";  
+        }           
+        else
+        {
+            std::cout << "INVALID FORMAT \n";
+            continue;   
+        }
+            
+    }
+
+
+}
+
 
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
@@ -289,8 +334,8 @@ int main(){
     std::cout << "You've selected: " << iterations << " many iterations, beginning!\n";
     
     //parseTxT("mapinput.txt");
-
-    parseTxT("species.txt");
+    //parseTxT("species.txt");
+    altparseTxt("species.txt");
 
     GameMap map; 
     OrganismDirectory orgd;
