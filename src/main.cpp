@@ -7,7 +7,7 @@
 #include <vector>   
 #include <set>
 #include <memory>
-
+#include <cassert>
 
 struct point {
     point() : x( 0 ), y( 0 ) {}
@@ -25,6 +25,16 @@ struct point {
         x -= other.x;
         y -= other.y;
         return *this;
+    }
+
+    bool operator ==(point const& other)
+    {
+        return((x == other.x) && (y == other.y));
+    }
+
+    bool operator !=(point const& other)
+    {
+        return((x != other.x) || (y != other.y));
     }
 
     int x;
@@ -134,6 +144,7 @@ public:
     virtual std::shared_ptr<thing> new_from_stream( std::istream& in ) const
     {
         thing_id id;
+
         if ( in >> id )
             return this->create( id );
 
@@ -146,8 +157,19 @@ public:
     }
 
     public:
-    thing_id id_; 
+    thing_id id_;
+
+    private:
+    virtual thing * clone_impl() const = 0;  
 };
+
+/*
+template <typename organism, typename thing>
+template <typename TerrainObject, typename thing>
+template <typename plant, typename thing>
+template <typename herbivore, typename thing>
+template <typename omnivore, typename thing>
+*/
 
 struct GameMap{
     GameMap(): extent(extent), gamemap(gamemap){}
@@ -172,6 +194,21 @@ struct GameMap{
 
 struct TerrainObject : public thing{
     TerrainObject() : thing(){}
+
+    virtual std::shared_ptr<thing> new_from_stream( std::istream& in ) const
+    {
+        thing_id id;
+
+        if ( in >> id )
+            return this->create( id );
+        return nullptr;
+    }
+
+    virtual std::shared_ptr<thing> create( thing_id id ) const
+    {
+        return nullptr;
+    }
+
 };
 
 struct organism : public thing{
@@ -183,6 +220,51 @@ struct organism : public thing{
     point location;
     std::string type;
 
+    virtual std::shared_ptr<organism> create( std::string type, thing_id id, int energy, std::vector<char> prey) const 
+    {
+        assert(false); 
+        return nullptr;
+    } 
+
+    virtual std::shared_ptr<organism> create( std::string type, thing_id id, int energy, std::vector<char> prey, point loction) const 
+    {
+        assert(false); 
+        return nullptr;
+    } 
+
+    virtual std::shared_ptr<thing> new_from_stream( std::istream& in ) const 
+    {
+        std::string type; 
+        thing_id id;
+        char c;
+        int energy;
+        int regrowcoef; 
+        std::vector<char> food_chain;
+
+
+        if (in >> type){
+            in >> c;  
+        }
+
+        if ( in >> id ){
+            in >> c;
+        }
+
+        if(c == '['){
+            in >> c;
+            while (c != ']'){
+                if (c != ','){
+                    food_chain.push_back(c);
+                }
+                in >> c; 
+            }
+            if (in >> energy){
+                return this -> create(type, id, energy, food_chain); 
+            }
+        }
+        return nullptr;
+    }
+
     virtual std::string kind() const { 
         return type; 
     }
@@ -191,7 +273,8 @@ struct organism : public thing{
         this -> location = destination;
     }
     
-    void gainEnergy(){
+    void gainEnergy(int consumed){
+        this -> energy += consumed; 
     }
 
     virtual void consume( organism& org){
@@ -208,9 +291,31 @@ struct plant : public organism{
         return "plant";
     }
 
-    std::shared_ptr<thing> create(thing_id id, int energy, std::string type, point location, int regrowth, bool passable) const 
+    std::shared_ptr<organism> create(thing_id id, int energy, std::string type, point location, int regrowth, bool passable) const 
     {
         return std::make_shared<plant>(id, energy, type, location, regrowth, passable);
+    }
+
+    std::shared_ptr<organism> create(thing_id id, int energy, std::string type, int regrowth, bool passable) const 
+    {
+        return std::make_shared<plant>(id, energy, type, location, regrowth, passable);
+    }
+
+    std::shared_ptr<thing> new_from_stream( std::istream& in ) const override
+    {
+        std::string type; 
+        thing_id id;
+        char c;
+        int energy;
+        int regrowcoef; 
+        std::vector<char> food_chain;
+        bool passable = false; 
+
+        if (in >> type >> id >> regrowcoef >> energy){
+            return this -> create(id, energy, type, location, regrowcoef, passable);
+        }
+        std::cout << "plant creation failed"; 
+        return nullptr;
     }
 
     void gainEnergy(){
@@ -239,7 +344,46 @@ struct herbivore : public organism{
     std::shared_ptr<thing> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
     {
         return std::make_shared<herbivore>(id, energy, type, location, prey);
-    } 
+    }
+
+    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, std::vector<thing_id> prey) const 
+    {
+        return std::make_shared<herbivore>(id, energy, type, location, prey);
+    }
+
+    std::shared_ptr<thing> new_from_stream( std::istream& in ) const 
+    {
+        std::string type; 
+        thing_id id;
+        char c;
+        int energy;
+        int regrowcoef; 
+        std::vector<char> food_chain;
+
+
+        if (in >> type){
+            in >> c;  
+        }
+
+        if ( in >> id ){
+            in >> c;
+        }
+
+        if(c == '['){
+            in >> c;
+            while (c != ']'){
+                if (c != ','){
+                    food_chain.push_back(c);
+                }
+                in >> c; 
+            }
+            if (in >> energy){
+                return this -> create(id, energy, type, food_chain); 
+            }
+        }
+        return nullptr;
+    }
+ 
 
     private:
     std::vector<thing_id> prey; 
@@ -260,28 +404,71 @@ struct omnivore : public organism{
         return std::make_shared<omnivore>(id, energy, type, location, prey);
     }  
 
+    std::shared_ptr<thing> create( thing_id id, int energy, std::string type, std::vector<thing_id> prey) const 
+    {
+        return std::make_shared<omnivore>(id, energy, type, location, prey);
+    }
+
+    std::shared_ptr<thing> new_from_stream( std::istream& in ) const 
+    {
+        std::string type; 
+        thing_id id;
+        char c;
+        int energy;
+        int regrowcoef; 
+        std::vector<char> food_chain;
+
+
+        if (in >> type){
+            in >> c;  
+        }
+
+        if ( in >> id ){
+            in >> c;
+        }
+
+        if(c == '['){
+            in >> c;
+            while (c != ']'){
+                if (c != ','){
+                    food_chain.push_back(c);
+                }
+                in >> c; 
+            }
+            if (in >> energy){
+                return this -> create(id, energy, type, food_chain); 
+            }
+        }
+        return nullptr;
+    }
+
     private:
     std::vector<thing_id> prey; 
 
 };
 
 struct OrganismList{
-    OrganismList() : orgVector(orgVector){} 
+    OrganismList() : orgLists(orgLists){} 
 
-    void addToList(std::shared_ptr<organism> org){
-        this -> orgVector.push_back(org); 
+    void addToList(std::string type ,std::shared_ptr<organism> org){
+        this -> orgLists[type].push_back(org); 
     }
-    void removeHelper(){
-    }
-    void removeFromList(point p){
-        //this -> orgVector.erase(); 
+
+    void removeFromList(std::shared_ptr<organism> org){
+        point p = org ->location; 
+
+        for (auto & element : this ->orgLists[org.get() -> kind()]){
+            if(element ->location == p){
+             //   this -> orgLists[org.get() -> kind()].erase();
+            }
+        }
     }
     public:
-    std::vector<std::shared_ptr<organism>> orgVector; 
+    std::map<std::string, std::vector<std::shared_ptr<organism>>> orgLists; 
 };
 
 
-//Directory of all species types
+//Directory of all species types and their base attributes 
 struct OrganismDirectory{
     OrganismDirectory() : odirectory(){} 
         /*
