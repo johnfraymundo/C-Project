@@ -86,7 +86,6 @@ void parseTxt(std::string fileinput){
 
 }
 
-
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
