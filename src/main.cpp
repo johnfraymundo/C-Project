@@ -1,6 +1,5 @@
 #include <iostream>
-#include <string>
-#include <regex> 
+#include <string> 
 #include <sstream>
 #include <fstream>
 #include <map>
@@ -85,7 +84,7 @@ void parseTxt(std::string fileinput){
 
 
 }
-
+/*
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
@@ -108,6 +107,7 @@ void parseTxT(std::string fileinput){
         //std::cout << str.length(); 
     }
 }
+*/
 
 struct thing{
 public:
@@ -162,7 +162,6 @@ struct GameMap{
 
     void constructMapFromFile(){
         parseTxT("mapinput.txt");
-
     }
     
     void changePosition(point current , point destination )
@@ -173,9 +172,11 @@ struct GameMap{
         dest = std::move(curr); 
     }
 
+    /*
     thing& getat(point p) const{
         return this ->gamemap[p.x][p.y];
     }
+    */
 
     private:
     point extent; 
@@ -259,16 +260,32 @@ struct organism : public thing{
         return type; 
     }
 
-    virtual void move(const point& destination){
-        this -> location = destination;
-    }
-    
-    virtual void gainEnergy(int consumed){
-        this -> energy += consumed; 
+    virtual thing_id id() const {
+        return this -> id; 
     }
 
-    virtual void consume( organism& org){
+    virtual void move(GameMap& gamemap){
+        point up = point(this->location.x,this->location.y++);
+        point down = point(this->location.x,this->location.y--);
+        point left = point(this->location.x--,this->location.y);
+        point right = point(this->location.x,this->location.y++);
+    }
+
+    virtual void predatorScan(GameMap& gamemap){
+    }
+
+    virtual void foodSearch(){
+    }
+
+    virtual void mating(){
+    }
+
+    virtual bool consume( organism& org){
         this -> energy += org.energy;
+
+        std::cout << "this creature isnt supposed to exist";
+        assert(false); 
+        return false;
     }
 
 };
@@ -307,16 +324,21 @@ struct plant : public organism{
         return nullptr;
     }
 
-    void regrow(){
-        int reg = regrow_coeff;
-        while (reg != 0){
-            --reg;
-        }
+    bool regrow(bool eaten){
+        if(eaten == true){
+            currRegrow = regrow_coeff;
+            this -> passable = true;       
+        } 
+        this ->currRegrow = --currRegrow;
 
-        this -> passable = true;     
+        if(currRegrow <= 0){
+            return true; 
+            this-> passable = false; 
+        }  
     } 
 
     public:
+    int currRegrow;
     int regrow_coeff;
     bool passable;
 
@@ -371,6 +393,15 @@ struct herbivore : public organism{
             }
         }
         return nullptr;
+    }
+
+    bool consume( organism& org) override{
+        for (auto it = prey.begin(); it != prey.end(); ++it){
+            if(org.id == *it)
+            this -> energy += org.energy;
+            return true;
+        }
+        return false; 
     }
  
     private:
@@ -429,6 +460,15 @@ struct omnivore : public organism{
         return nullptr;
     }
 
+    bool consume( organism& org) override{
+        for (auto it = prey.begin(); it != prey.end(); ++it){
+            if(org.id == *it)
+            this -> energy += org.energy;
+            return true;
+        }
+        return false; 
+    }
+
     private:
     std::vector<thing_id> prey; 
 
@@ -442,10 +482,10 @@ struct OrganismList{
             this -> pla.push_back(org);
         }
         else if(type == "herbivore"){
-
+            this -> herbi.push_back(org);
         }
         else if(type == "omnivore"){
-
+            this -> omni.push_back(org);
         }
         this -> orgLists[type].push_back(org); 
     }
@@ -499,11 +539,9 @@ struct OrganismDirectory{
 };
 
 void populateSpeciesDirectory(std::string filename, GameMap map, OrganismDirectory orgdir){
-
 }
 
-void populateMap(){
-
+void populateMapOrglist(){
 }
 
 void gameLoop(){
