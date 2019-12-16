@@ -82,7 +82,6 @@ void parseTxt(std::string fileinput){
             
     }
 
-
 }
 /*
 void parseTxT(std::string fileinput){
@@ -154,35 +153,7 @@ public:
     public:
     thing_id id_;
     std::string type_;
-
 };
-
-struct GameMap{
-    GameMap(): extent(extent), gamemap(gamemap){}
-
-    void constructMapFromFile(){
-        parseTxT("mapinput.txt");
-    }
-    
-    void changePosition(point current , point destination )
-    {
-        std::shared_ptr<thing> curr = this ->gamemap[current.x][current.y];
-        std::shared_ptr<thing> dest = this ->gamemap[destination.x][destination.y]; 
-
-        dest = std::move(curr); 
-    }
-
-    /*
-    thing& getat(point p) const{
-        return this ->gamemap[p.x][p.y];
-    }
-    */
-
-    private:
-    point extent; 
-    std::vector<std::vector<std::shared_ptr<thing>>> gamemap;
-};
-
 struct TerrainObject : public thing{
     TerrainObject() : thing(){}
 
@@ -264,20 +235,45 @@ struct organism : public thing{
         return this -> id; 
     }
 
-    virtual void move(GameMap& gamemap){
+    virtual point move(GameMap& gamemap){
         point up = point(this->location.x,this->location.y++);
         point down = point(this->location.x,this->location.y--);
         point left = point(this->location.x--,this->location.y);
         point right = point(this->location.x,this->location.y++);
+
+        std::shared_ptr<thing> u = gamemap.getAt(up);
+        std::shared_ptr<thing> d = gamemap.getAt(down);
+        std::shared_ptr<thing> l = gamemap.getAt(left);
+        std::shared_ptr<thing> r = gamemap.getAt(right);
+
+        if(*u->id == '#' || *u->id == '~' ){
+            //destination point impassible, implement recursive move code? 
+        }
+
+        //if move, energy subtracts by one. 
+        this -> energy = --energy; 
+    }
+
+    virtual point die(bool eaten){
+        if (this->energy <= 0){
+            std::cout<< "organism" << this->type << " " << this ->id << " at point (" << location.x << " , " << location.y;
+            return this->location; 
+        }
     }
 
     virtual void predatorScan(GameMap& gamemap){
+        std::cout << "this creater isnt supposed to exist";
+        assert(false);
     }
 
     virtual void foodSearch(){
+        std::cout << "this creature isnt supposed to exist";
+        assert(false);
     }
 
     virtual void mating(){
+        std::cout << "this creature isnt supposed to exist";
+        assert(false); 
     }
 
     virtual bool consume( organism& org){
@@ -487,7 +483,9 @@ struct OrganismList{
         else if(type == "omnivore"){
             this -> omni.push_back(org);
         }
-        this -> orgLists[type].push_back(org); 
+        else 
+            std::cout << "Not a recognised organism type, creating new list";
+            this -> orgLists[type].push_back(org); 
     }
 
     void removeFromList(std::shared_ptr<organism> org){
@@ -538,10 +536,48 @@ struct OrganismDirectory{
 
 };
 
+struct GameMap{
+    GameMap(): extent(extent), gamemap(gamemap){}
+
+    void constructMapFromFile(){
+        //std::istream s; 
+        parseTxT("mapinput.txt");
+    }
+    
+    void changePosition(point current , point destination )
+    {
+        std::shared_ptr<thing> curr = this ->gamemap[current.x][current.y];
+        std::shared_ptr<thing> dest = this ->gamemap[destination.x][destination.y]; 
+
+        std::shared_ptr<thing> temp = dest;
+        dest = std::move(curr); 
+    }
+
+    void setExtent(point p){
+        this ->extent = p; 
+    }
+
+    point getExtent(){
+        return extent;
+    }
+
+    std::shared_ptr<thing>& getAt(point p) const{
+        std::shared_ptr<thing> t = this -> gamemap[p.x][p.y];
+        return t; 
+    }
+    
+    private:
+    point extent; 
+    std::vector<std::vector<std::shared_ptr<thing>>> gamemap;
+};
+
+
 void populateSpeciesDirectory(std::string filename, GameMap map, OrganismDirectory orgdir){
+    //create template directory for all organisms 
 }
 
 void populateMapOrglist(){
+    //populate game map with thing ptrs and populate org list with shared ptrs. 
 }
 
 void gameLoop(){
