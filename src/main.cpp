@@ -7,13 +7,8 @@
 #include <vector>   
 #include <set>
 #include <memory>
-<<<<<<< HEAD
 #include <cassert>
 #include <list>
-=======
-#include <list>
-
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
 
 struct point {
     point() : x( 0 ), y( 0 ) {}
@@ -47,11 +42,7 @@ struct point {
     int y;
 };
 
-<<<<<<< HEAD
 void parseTxt(std::string fileinput){
-=======
-void altparseTxt(std::string fileinput){
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
     char id; 
     std::string type;
     int regrow;
@@ -59,10 +50,6 @@ void altparseTxt(std::string fileinput){
     int energy; 
 
     std::string str; 
-<<<<<<< HEAD
-=======
-
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
     std::ifstream myfile(fileinput);
     std::ifstream myfile2(fileinput);
 
@@ -73,11 +60,7 @@ void altparseTxt(std::string fileinput){
     }
 
     while (std::getline(myfile2, str)){
-<<<<<<< HEAD
        // std::cout << str << "\n"; 
-=======
-        std::cout << str << "\n"; 
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
         
         if(myfile >> type >> id >> regrow >> energy)
         {
@@ -87,15 +70,9 @@ void altparseTxt(std::string fileinput){
             std::cout << energy << "\n";  
         }
         if (myfile >> type >> id >> energy){
-<<<<<<< HEAD
             std::cout << type << " ";
             std::cout << id << " ";
             std::cout << prey << " ";
-=======
-            std::cout << type << "\n";
-            std::cout << id << "\n";
-            std::cout << prey << "\n";
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
             std::cout << energy << "\n";  
         }           
         else
@@ -108,17 +85,12 @@ void altparseTxt(std::string fileinput){
 
 
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
 
 void parseTxT(std::string fileinput){
     std::ifstream file(fileinput);
     std::string str; 
     std::regex reg(R"(?<=\[).+?(?=\])");
     std::smatch matches; 
-
     std::cout << std::boolalpha;
 
     while (std::getline(file, str)) {
@@ -137,19 +109,6 @@ void parseTxT(std::string fileinput){
     }
 }
 
-<<<<<<< HEAD
-=======
-
-
-/*
-std::vector<char> regexPreyList(std::string str){
-    std::regex r("([])");
-    std::smatch matches;  
-
-} 
-*/
-
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
 struct thing{
 public:
     using thing_id = char; 
@@ -191,10 +150,6 @@ public:
     { 
         return this -> type_; 
     }
-
-    void setID( char id ){
-        this ->id_ = id; 
-    } 
 
     public:
     thing_id id_;
@@ -434,7 +389,7 @@ struct omnivore : public organism{
     std::shared_ptr<organism> create( thing_id id, int energy, std::string type, point location, std::vector<thing_id> prey) const 
     {
         return std::make_shared<omnivore>(id, energy, type, location, prey);
-    } 
+    }  
 
     std::shared_ptr<organism> create( thing_id id, int energy, std::string type, std::vector<thing_id> prey) const 
     {
@@ -573,10 +528,6 @@ int main(){
     std::cout << "You've selected: " << iterations << " many iterations, beginning!\n";
     
     //parseTxT("mapinput.txt");
-<<<<<<< HEAD
-=======
-
->>>>>>> a43716de7e240f6e810899d32cc37fe9c3378f9e
     //parseTxT("species.txt");
     altparseTxt("species.txt");
 
